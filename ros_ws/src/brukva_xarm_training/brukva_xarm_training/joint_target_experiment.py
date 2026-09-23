@@ -145,7 +145,7 @@ class JointTargetExperiment(Node):
                     True,
                     f'target={self.target_angle:.3f}, '
                     f'actual={actual_angle:.3f}, '
-                    f'error={error:.4f} rad'
+                    f'error={error:.4f} rad, '
                     f'velocity={actual_velocity:.4f} rad/s',
                 )
         else:
