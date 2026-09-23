@@ -24,6 +24,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'joint_target_experiment = '
+            'brukva_xarm_training.joint_target_experiment:main',
         ],
     },
 )
