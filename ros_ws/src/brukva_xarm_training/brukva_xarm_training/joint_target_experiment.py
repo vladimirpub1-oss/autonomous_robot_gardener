@@ -17,6 +17,7 @@ class JointTargetExperiment(Node):
 
         self.declare_parameter('target_angle', 0.35)
         self.declare_parameter('tolerance', 0.02)
+        self.declare_parameter('velocity_tolerance', 0.01)
         self.declare_parameter('hold_time', 0.5)
         self.declare_parameter('timeout', 10.0)
         self.declare_parameter('movement_time', 3.0)
@@ -27,6 +28,11 @@ class JointTargetExperiment(Node):
         self.tolerance = float(
             self.get_parameter('tolerance').value
         )
+
+        self.velocity_tolerance = float(
+            self.get_parameter('velocity_tolerance').value
+        )
+
         self.hold_time = float(
             self.get_parameter('hold_time').value
         )
@@ -78,6 +84,8 @@ class JointTargetExperiment(Node):
 
         positions_by_name = dict(zip(msg.name, msg.position))
 
+        velocities_by_name = dict(zip(msg.name, msg.velocity))
+
         missing = [
             name
             for name in self.joint_names
@@ -118,9 +126,16 @@ class JointTargetExperiment(Node):
             return
 
         actual_angle = positions_by_name[self.controlled_joint]
+        actual_velocity = velocities_by_name.get(
+            self.controlled_joint,
+            float('inf'),
+        )
         error = abs(self.target_angle - actual_angle)
 
-        if error <= self.tolerance:
+        position_ok = error <= self.tolerance
+        velocity_ok = abs(actual_velocity) <= self.velocity_tolerance
+
+        if position_ok and velocity_ok:
             if self.hold_started_at is None:
                 self.hold_started_at = time.monotonic()
 
@@ -130,7 +145,8 @@ class JointTargetExperiment(Node):
                     True,
                     f'target={self.target_angle:.3f}, '
                     f'actual={actual_angle:.3f}, '
-                    f'error={error:.4f} rad',
+                    f'error={error:.4f} rad'
+                    f'velocity={actual_velocity:.4f} rad/s',
                 )
         else:
             self.hold_started_at = None
